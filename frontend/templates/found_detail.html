@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+
+    <!-- Found Item Detail Card -->
+    <div class="detail-card mx-auto">
+        <h1 id="item-name" class="detail-title">Loading...</h1>
+
+        <div class="detail-info">
+            <p><strong>Item ID:</strong> <span id="item-id"></span></p>
+            <p><strong>Category:</strong> <span id="item-category"></span></p>
+            <p><strong>Location Found:</strong> <span id="item-location"></span></p>
+            <p><strong>Date Found:</strong> <span id="item-date"></span></p>
+            <p><strong>Description:</strong></p>
+            <p id="item-description" class="detail-desc"></p>
+            <p><strong>Found By:</strong> <span id="item-owner"></span></p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn hero-btn mt-3">Back to Dashboard</a>
+        <button id="view-matches-btn" class="btn hero-btn mt-3">View Matching Lost Items</button>
+
+        <!-- Container to display matching lost items -->
+        <div id="matches-container" class="mt-4"></div>
+    </div>
+
+</div>
+
+<script>
+/* ===================== GLOBAL VARIABLES ===================== */
+const accessToken = localStorage.getItem("access_token");
+const foundItemId = "{{ id|default:0 }}"; 
+const CURRENT_USER_ID = {{ request.user.id|default:'null' }};
+let foundItemOwnerId = null;
+
+/* ===================== FETCH FOUND ITEM DETAILS ===================== */
+async function fetchFoundItem() {
+    if(!foundItemId || foundItemId === "0") return;
+
+    try {
+        const res = await fetch(`/api/found-items/${foundItemId}/`);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const item = await res.json();
+
+        document.getElementById("item-name").innerText = item?.name || 'N/A';
+        document.getElementById("item-id").innerText = item?.id || 'N/A';
+        document.getElementById("item-category").innerText = item?.category || 'N/A';
+        document.getElementById("item-location").innerText = item?.location || 'N/A';
+        document.getElementById("item-date").innerText = item?.date_found || 'N/A';
+        document.getElementById("item-description").innerText = item?.description || 'N/A';
+        document.getElementById("item-owner").innerText = item?.user?.username || 'Unknown';
+
+        foundItemOwnerId = item?.user?.id || null;
+
+        // Hide view matches if current user is owner
+        if(CURRENT_USER_ID && foundItemOwnerId === CURRENT_USER_ID){
+            document.getElementById("view-matches-btn").style.display = 'none';
+        }
+
+    } catch(err) {
+        console.error("Error fetching found item:", err);
+        alert("Failed to load found item details.");
+    }
+}
+
+fetchFoundItem();
+
+/* ===================== VIEW MATCHING LOST ITEMS ===================== */
+document.getElementById("view-matches-btn").addEventListener("click", async () => {
+    const container = document.getElementById("matches-container");
+    container.innerHTML = "<p>Loading matches...</p>";
+
+    try {
+        const res = await fetch(`/api/lost-items/`);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const lostItems = await res.json();
+
+        if(!lostItems || lostItems.length === 0){
+            container.innerHTML = "<p>No lost items found.</p>";
+            return;
+        }
+
+        let html = `<h3>Available Lost Items</h3><div class="item-grid">`;
+        lostItems.forEach(lost => {
+            const showClaim = accessToken && CURRENT_USER_ID && CURRENT_USER_ID !== foundItemOwnerId;
+
+            html += `
+            <div class="item-card">
+                <h4>${lost?.name || 'N/A'}</h4>
+                <p><strong>Category:</strong> ${lost?.category || 'N/A'}</p>
+                <p><strong>Location:</strong> ${lost?.location || 'N/A'}</p>
+                <p><strong>Date Lost:</strong> ${lost?.date_lost || 'N/A'}</p>
+                <p><strong>Description:</strong> ${lost?.description || 'N/A'}</p>
+                ${showClaim ? `<button onclick="claimItem(${lost.id})" class="btn hero-btn mt-2">Claim</button>` : ''}
+            </div>`;
+        });
+        html += "</div>";
+        container.innerHTML = html;
+
+    } catch(err) {
+        console.error("Error loading lost items:", err);
+        container.innerHTML = "<p>Error loading lost items.</p>";
+    }
+});
+
+/* ===================== CLAIM FUNCTION ===================== */
+async function claimItem(lostItemId) {
+    if(!accessToken){
+        alert("Please log in to claim this item.");
+        window.location.href = `/login/?next=/found/${foundItemId}/`;
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/claims/', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ lost_item: parseInt(lostItemId), found_item: parseInt(foundItemId) })
+        });
+
+        if(!res.ok){
+            const text = await res.text();
+            throw new Error(text);
+        }
+
+        alert("Claim submitted successfully! Pending verification by owner.");
+        location.reload();
+
+    } catch(err){
+        console.error("Claim error:", err);
+        alert("Error submitting claim. Check console for details.");
+    }
+}
+</script>
+
+<style>
+.detail-card { max-width: 650px; background: rgba(255,255,255,0.06); border-radius: 20px; padding: 30px; color: white; }
+.detail-title { color:#00fff7; font-size:2.5rem; font-weight:700; margin-bottom:20px; }
+.detail-info p { font-size:1.1rem; margin-bottom:10px; }
+.detail-desc { background: rgba(0,0,0,0.4); padding:12px; border-radius:10px; border-left:3px solid #00fff7; }
+.item-grid { display:flex; gap:20px; flex-wrap:wrap; margin-top:10px; }
+.item-card { width:260px; background: rgba(255,255,255,0.05); padding:20px; border-radius:20px; border:1px solid rgba(0,255,247,0.3); color:#fff; box-shadow:0 0 20px rgba(0,255,247,0.2); transition:0.3s; }
+.item-card:hover { transform: translateY(-5px); box-shadow:0 0 35px rgba(0,255,247,0.4); }
+.item-card button { width:100%; margin-top:10px; }
+</style>
+
+{% endblock %}

@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- DASHBOARD TITLE -->
+<div class="hero-section" style="height:auto; padding:50px 20px; text-align:center;">
+    <h1 style="font-size:3rem; color:#00fff7;">Dashboard</h1>
+    <p style="color:#ccc; font-size:1.1rem;">Complete overview of Lost & Found system activity</p>
+</div>
+
+<!-- REPORT BUTTONS -->
+<div class="container my-4 text-center">
+    <button id="report-lost-btn" class="btn hero-btn mx-2">Report Lost Item</button>
+    <button id="report-found-btn" class="btn hero-btn mx-2">Report Found Item</button>
+    <button id="my-reports-btn" class="btn hero-btn mx-2">My Reports</button>
+</div>
+
+<!-- STATS CARDS -->
+<div class="container my-5">
+    <div class="row g-4 text-center">
+        <div class="col-md-3">
+            <div class="dash-card">
+                <h2 id="total-lost">0</h2>
+                <p>Total Lost Items</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dash-card">
+                <h2 id="total-found">0</h2>
+                <p>Total Found Items</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dash-card">
+                <h2 id="total-reunited">0</h2>
+                <p>Items Reunited</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="dash-card">
+                <h2 id="pending-verification">0</h2>
+                <p>Pending Verifications</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TABLES -->
+<div class="container mt-5">
+    <h2 class="section-title">All Lost Items</h2>
+    <div style="overflow-x:auto; margin-bottom:40px;">
+        <table id="lost-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Date Lost</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2 class="section-title">All Found Items</h2>
+    <div style="overflow-x:auto; margin-bottom:40px;">
+        <table id="found-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Item Name</th>
+                    <th>Category</th>
+                    <th>Date Found</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <h2 class="section-title">All Claims</h2>
+    <div style="overflow-x:auto;">
+        <table id="claims-table" class="display" style="width:100%">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Lost Item</th>
+                    <th>Found Item</th>
+                    <th>Lost Owner Email</th>
+                    <th>Found Owner Email</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- DATA TABLES -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function(){
+
+    const accessToken = localStorage.getItem('access_token');
+    const CURRENT_USER_ID = {{ request.user.id|default:'null' }};
+
+    // ===== REPORT BUTTONS =====
+    $('#report-lost-btn').click(() => {
+        if(!accessToken) return window.location.href = "/login/?next=/report-lost/";
+        window.location.href = "/report-lost/";
+    });
+
+    $('#report-found-btn').click(() => {
+        if(!accessToken) return window.location.href = "/login/?next=/report-found/";
+        window.location.href = "/report-found/";
+    });
+
+    $('#my-reports-btn').click(() => {
+        if(!accessToken) return window.location.href = "/login/?next=/my-reports/";
+        window.location.href = "/my-reports/";
+    });
+
+    // ===== FETCH LOST ITEMS =====
+    $.ajax({
+        url: "/api/lost-items/",
+        method: "GET",
+        success: function(data){
+            let items = data.results || data;
+            let visibleLostItems = items.filter(item => !item.has_approved_claim); // hide approved items
+            $('#total-lost').text(visibleLostItems.length);
+
+            let rows = '';
+            visibleLostItems.forEach(item => {
+                rows += `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.date_lost}</td>
+                    <td>${item.location}</td>
+                    <td>${item.description}</td>
+                    <td><a href="/lost/${item.id}/" class="btn btn-sm hero-btn">View</a></td>
+                </tr>`;
+            });
+
+            $('#lost-table tbody').html(rows);
+            $('#lost-table').DataTable({ pageLength: 10, responsive: true, scrollX: true, order: [[3,'desc']] });
+        },
+        error: function(err){ console.error("Error fetching lost items:", err); }
+    });
+
+    // ===== FETCH FOUND ITEMS =====
+    $.ajax({
+        url: "/api/found-items/",
+        method: "GET",
+        success: function(data){
+            let items = data.results || data;
+            let visibleFoundItems = items.filter(item => !item.has_approved_claim); // hide approved items
+            $('#total-found').text(visibleFoundItems.length);
+
+            let rows = '';
+            visibleFoundItems.forEach(item => {
+                let actionHtml = `<a href="/found/${item.id}/" class="btn btn-sm hero-btn">View</a>`;
+
+                if(accessToken && CURRENT_USER_ID != item.user){
+                    actionHtml += `<button class="btn btn-sm hero-btn ms-1" onclick="claimItem(${item.id})">Claim</button>`;
+                }
+
+                if(!accessToken){
+                    actionHtml += `<button class="btn btn-sm hero-btn ms-1" onclick="window.location.href='/login/?next=/found/${item.id}/'">Claim</button>`;
+                }
+
+                rows += `<tr>
+                    <td>${item.id}</td>
+                    <td>${item.name}</td>
+                    <td>${item.category}</td>
+                    <td>${item.date_found}</td>
+                    <td>${item.location}</td>
+                    <td>${item.description}</td>
+                    <td>${actionHtml}</td>
+                </tr>`;
+            });
+
+            $('#found-table tbody').html(rows);
+            $('#found-table').DataTable({ pageLength: 10, responsive: true, scrollX: true, order: [[3,'desc']] });
+        },
+        error: function(err){ console.error("Error fetching found items:", err); }
+    });
+
+    // ===== FETCH CLAIMS =====
+    function loadClaims(){
+        $.ajax({
+            url: "/api/claims/",
+            method: "GET",
+            headers: accessToken ? { 'Authorization': 'Bearer ' + accessToken } : {},
+            success: function(data){
+                let claims = data.results || data;
+                let pendingCount = 0;
+                let reunitedCount = 0;
+                let rows = '';
+
+                if($.fn.DataTable.isDataTable('#claims-table')){
+                    $('#claims-table').DataTable().clear().destroy();
+                }
+
+                claims.forEach(c => {
+                    if(c.status === 'Approved') reunitedCount++;
+
+                    let actionHtml = '';
+                    if(c.status === 'Pending' && CURRENT_USER_ID && c.found_item_owner_id == CURRENT_USER_ID){
+                        pendingCount++;
+                        actionHtml = `
+                            <button class="btn btn-sm hero-btn" onclick="approveClaim(${c.id})">Approve</button>
+                            <button class="btn btn-sm hero-btn ms-1" onclick="rejectClaim(${c.id})">Reject</button>`;
+                    } else {
+                        actionHtml = `<span style="color:#ccc;">${c.status}</span>`;
+                    }
+
+                    rows += `<tr>
+                        <td>${c.id}</td>
+                        <td>${c.lost_item_detail.name}</td>
+                        <td>${c.found_item_detail.name}</td>
+                        <td>${c.lost_owner_email}</td>
+                        <td>${c.found_owner_email}</td>
+                        <td>${c.status}</td>
+                        <td>${actionHtml}</td>
+                    </tr>`;
+                });
+
+                $('#claims-table tbody').html(rows);
+                $('#pending-verification').text(pendingCount);
+                $('#total-reunited').text(reunitedCount);
+
+                $('#claims-table').DataTable({ pageLength: 10, responsive: true, scrollX: true });
+            },
+            error: function(err){ console.error("Error fetching claims:", err); }
+        });
+    }
+
+    loadClaims();
+
+    // ===== CLAIM ITEM FUNCTION =====
+    window.claimItem = function(foundItemId){
+        if(!accessToken) return window.location.href = `/login/?next=/found/${foundItemId}/`;
+
+        const lostItemId = prompt("Enter the ID of your lost item to claim this found item:");
+        if(!lostItemId) return alert("Lost item ID is required.");
+
+        $.ajax({
+            url: "/api/claims/",
+            method: "POST",
+            headers: { 
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            data: JSON.stringify({ lost_item: lostItemId, found_item: foundItemId }),
+            success: function(){
+                alert("Claim submitted successfully!");
+                loadClaims();
+            },
+            error: function(err){
+                console.error("Error submitting claim:", err);
+                alert("Failed to submit claim.");
+            }
+        });
+    }
+
+    // ===== APPROVE / REJECT =====
+    window.approveClaim = function(claimId){
+        $.ajax({
+            url: `/api/claims/${claimId}/approve/`,
+            method: "POST",
+            headers: { 'Authorization': 'Bearer ' + accessToken },
+            success: function(){ 
+                alert("Claim approved!"); 
+                loadClaims(); 
+                // Refresh lost/found tables to remove approved item
+                setTimeout(() => { location.reload(); }, 500); 
+            },
+            error: function(err){ console.error(err); alert("Failed to approve claim."); }
+        });
+    }
+
+    window.rejectClaim = function(claimId){
+        $.ajax({
+            url: `/api/claims/${claimId}/reject/`,
+            method: "POST",
+            headers: { 'Authorization': 'Bearer ' + accessToken },
+            success: function(){ 
+                alert("Claim rejected."); 
+                loadClaims(); 
+            },
+            error: function(err){ console.error(err); alert("Failed to reject claim."); }
+        });
+    }
+
+});
+</script>
+
+<!-- STYLES -->
+<style>
+.dash-card {
+    background: rgba(255,255,255,0.05);
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 0 20px rgba(0,255,247,0.2);
+    border: 1px solid rgba(0,255,247,0.3);
+    color: #fff;
+    transition: 0.3s;
+}
+.dash-card:hover { transform: translateY(-6px); box-shadow: 0 0 35px rgba(0,255,247,0.6); }
+.section-title { color:#00fff7; font-weight:700; margin-bottom:15px; }
+table.dataTable { color: #fff; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,255,247,0.3); }
+table.dataTable thead th { color: #00fff7; border-bottom: 2px solid #00fff7; }
+table.dataTable tbody tr { background: rgba(0,0,0,0.2); transition:0.3s; }
+table.dataTable tbody tr:hover { background: rgba(0,255,247,0.1); box-shadow: 0 0 15px rgba(0,255,247,0.3); }
+</style>
+
+{% endblock %}

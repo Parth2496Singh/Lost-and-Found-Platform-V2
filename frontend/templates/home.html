@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<!-- HERO SECTION -->
+<section class="hero-section">
+    <h1>Welcome to Lost & Found</h1>
+    <p>Report lost items, found items, and claim matches easily.</p>
+    <div class="d-flex gap-3 mt-4">
+        <button class="hero-btn" id="home-report-lost">Report Lost</button>
+        <button class="hero-btn" id="home-report-found">Report Found</button>
+    </div>
+</section>
+
+<!-- SEARCH BAR -->
+<div class="search-bar">
+    <input type="text" placeholder="Search for items..." id="search-input">
+    <button id="search-btn">Search</button>
+</div>
+
+<!-- CARDS SECTION -->
+<section class="cards-section">
+    {% for item in items %}
+    <div class="card">
+        <h3>{{ item.name }}</h3>
+        <p>{{ item.description|truncatechars:80 }}</p>
+        <button class="hero-btn claim-btn" data-item-id="{{ item.id }}">Claim</button>
+    </div>
+    {% empty %}
+    <p style="color:#ccc;">No items found yet.</p>
+    {% endfor %}
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const accessToken = localStorage.getItem("access_token");
+
+    // HERO buttons
+    document.getElementById("home-report-lost").addEventListener("click", () => {
+        window.location.href = accessToken ? "{% url 'report_lost' %}" : "{% url 'login' %}";
+    });
+
+    document.getElementById("home-report-found").addEventListener("click", () => {
+        window.location.href = accessToken ? "{% url 'report_found' %}" : "{% url 'login' %}";
+    });
+
+    // CLAIM buttons
+    document.querySelectorAll(".claim-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+            if(!accessToken){
+                window.location.href = "{% url 'login' %}";
+                return;
+            }
+            const itemId = btn.dataset.itemId;
+            // Assumes you have a view for claiming items by ID
+            window.location.href = `/claim/${itemId}/`;
+        });
+    });
+
+    // SEARCH button
+    document.getElementById("search-btn").addEventListener("click", () => {
+        const query = document.getElementById("search-input").value.trim();
+        if(query) window.location.href = `/search/?q=${encodeURIComponent(query)}`;
+    });
+
+    // Optional: allow pressing Enter in search input
+    document.getElementById("search-input").addEventListener("keypress", (e) => {
+        if(e.key === "Enter") document.getElementById("search-btn").click();
+    });
+});
+</script>
+
+{% endblock %}

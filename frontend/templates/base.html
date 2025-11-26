@@ -1,0 +1,356 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lost & Found Platform</title>
+
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+<!-- Bootstrap CSS -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+/* ---------- GLOBAL ---------- */
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg,#0d0d0d,#111,#0d0d0d);
+    color:#fff;
+    overflow-x:hidden;
+    margin:0;
+}
+
+/* ---------- FLOATING TRIANGLES ---------- */
+#floating-items {
+    position:fixed;
+    width:100%;
+    height:100%;
+    top:0;
+    left:0;
+    z-index:0;
+    pointer-events:none;
+    overflow:hidden;
+}
+.floating-triangle {
+    position:absolute;
+    width:20px;
+    height:20px;
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    background: linear-gradient(45deg,#00fff7,#ff00ff);
+    filter: drop-shadow(0 0 10px #00fff7) drop-shadow(0 0 20px #ff00ff);
+    opacity:0.7;
+    animation: floatAnim linear infinite;
+}
+
+/* ---------- NAVBAR ---------- */
+.navbar {
+    backdrop-filter: blur(25px);
+    background: rgba(255,255,255,0.05);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    z-index:10;
+}
+.navbar-brand {
+    font-weight:700;
+    font-size:1.8rem;
+    background: linear-gradient(90deg, #00fff7, #ff00ff, #ffea00);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+.nav-link {
+    font-weight:500;
+    margin-right:1rem;
+    position:relative;
+    color:#fff !important;
+}
+.nav-link::after {
+    content:''; position:absolute;
+    width:0%; height:2px;
+    background:#00fff7; bottom:-3px; left:0;
+    transition:0.4s;
+}
+.nav-link:hover::after { width:100%; }
+.nav-link:hover { color:#00fff7 !important; }
+
+/* ---------- HERO ---------- */
+.hero-section {
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    position:relative;
+    z-index:5;
+}
+.hero-section h1 {
+    font-size:5rem;
+    font-weight:800;
+    color:#fff;
+    animation: fadeInUp 1s forwards;
+}
+.hero-section p {
+    font-size:1.5rem;
+    margin:1.5rem 0;
+    opacity:0.85;
+    animation: fadeInUp 1s 0.3s forwards;
+}
+.hero-btn {
+    border-radius:50px;
+    padding:1rem 2.5rem;
+    font-size:1.2rem;
+    font-weight:700;
+    transition:0.4s;
+    background: linear-gradient(90deg,#00fff7,#ff00ff);
+    border:none;
+    color:#fff;
+    box-shadow:0 0 20px #0ff, 0 0 50px #ff00ff;
+}
+.hero-btn:hover {
+    transform: scale(1.1) translateY(-5px);
+    box-shadow: 0 0 30px #00fff7, 0 0 60px #ff00ff;
+}
+
+/* ---------- SEARCH ---------- */
+.search-bar {
+    max-width: 650px;
+    margin: -60px auto 60px auto;
+    backdrop-filter: blur(40px);
+    background: rgba(255,255,255,0.05);
+    border-radius:50px;
+    padding:0.5rem 1rem;
+    box-shadow:0 12px 50px rgba(0,0,0,0.4);
+    transition:0.4s;
+    z-index:5;
+    position:relative;
+}
+.search-bar:hover { background: rgba(255,255,255,0.08); }
+.search-bar input {
+    border:none;
+    background:transparent;
+    color:#fff;
+    font-size:1.1rem;
+    width:100%;
+}
+.search-bar input::placeholder { color:#ddd; opacity:0.8; }
+.search-bar button {
+    border-radius:50px;
+    background: linear-gradient(90deg,#00fff7,#ff00ff);
+    border:none;
+    color:#fff;
+    font-weight:700;
+    transition:0.3s;
+}
+.search-bar button:hover { transform: scale(1.05); box-shadow:0 8px 30px rgba(0,255,247,0.6); }
+
+/* ---------- CARDS ---------- */
+.cards-section {
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:3rem;
+    padding:120px 20px;
+    perspective:1500px;
+    z-index:5;
+    position:relative;
+}
+.card {
+    backdrop-filter: blur(25px);
+    background: rgba(255,255,255,0.05);
+    border-radius:25px;
+    padding:2rem;
+    width:260px;
+    transition:0.5s;
+    box-shadow:0 20px 50px rgba(0,255,247,0.2);
+    transform-style: preserve-3d;
+    cursor:pointer;
+    border: 1px solid rgba(0,255,247,0.3);
+}
+.card:hover {
+    transform: translateY(-10px) rotateX(5deg) rotateY(5deg);
+    box-shadow:0 25px 60px rgba(0,255,247,0.4);
+}
+.card h3 { color:#fff; margin-bottom:1rem; }
+.card p { color:#ddd; }
+
+/* ---------- FOOTER ---------- */
+footer {
+    background-color:#0f1115;
+    color:#fff;
+    padding:100px 0;
+    z-index:5;
+    position:relative;
+}
+footer a { color:#00fff7; transition:0.3s; }
+footer a:hover { color:#fff; }
+
+/* ---------- ANIMATIONS ---------- */
+@keyframes fadeInUp {
+    from {opacity:0; transform: translateY(20px);}
+    to {opacity:1; transform: translateY(0);}
+}
+@keyframes floatAnim {
+    0% { transform: translateY(0px) rotate(0deg);}
+    100% { transform: translateY(-120vh) rotate(360deg);}
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media(max-width:768px){
+    .hero-section h1{ font-size:3.5rem;}
+    .hero-section p{ font-size:1.2rem;}
+    .cards-section {flex-direction:column; align-items:center;}
+}
+</style>
+</head>
+<body>
+
+<!-- FLOATING TRIANGLES -->
+<div id="floating-items"></div>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-light sticky-top py-3">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'home' %}">Lost & Found</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto" id="nav-buttons">
+                <!-- JS will dynamically inject buttons -->
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<script>
+// -------------------- TOKEN MANAGEMENT --------------------
+function getAccessToken() {
+    return localStorage.getItem("access_token");
+}
+
+async function refreshAccessToken() {
+    const refreshToken = localStorage.getItem("refresh_token");
+    if (!refreshToken) return null;
+
+    try {
+        const res = await fetch("/api/token/refresh/", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ refresh: refreshToken })
+        });
+        if (!res.ok) throw new Error("Refresh failed");
+        const data = await res.json();
+        localStorage.setItem("access_token", data.access);
+        return data.access;
+    } catch (e) {
+        console.error("Token refresh error:", e);
+        logout();
+        return null;
+    }
+}
+
+function logout() {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    window.location.href = "{% url 'login' %}";
+}
+
+// -------------------- AUTHENTICATED FETCH --------------------
+async function sendAuthenticatedRequest(url, options = {}) {
+    let token = getAccessToken();
+    if (!token) {
+        token = await refreshAccessToken();
+        if (!token) throw new Error("No valid token");
+    }
+
+    options.headers = {
+        ...options.headers,
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json"
+    };
+
+    return fetch(url, options);
+}
+
+// -------------------- NAVIGATION --------------------
+const navButtons = document.getElementById("nav-buttons");
+
+function redirectIfNotLoggedIn(url){
+    if(!getAccessToken()){
+        window.location.href = "{% url 'login' %}";
+    } else {
+        window.location.href = url;
+    }
+}
+
+function setupNav(){
+    if(getAccessToken()){
+        navButtons.innerHTML = `
+            <li class="nav-item"><a class="nav-link" href="#" onclick="redirectIfNotLoggedIn('{% url 'report_lost' %}')">Report Lost</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" onclick="redirectIfNotLoggedIn('{% url 'report_found' %}')">Report Found</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'search' %}">Search</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="nav-item"><button id="logout-btn" class="btn hero-btn ms-2">Logout</button></li>
+        `;
+        document.getElementById("logout-btn").addEventListener("click", logout);
+    } else {
+        navButtons.innerHTML = `
+            <li class="nav-item"><a class="nav-link" href="#" onclick="redirectIfNotLoggedIn('{% url 'report_lost' %}')">Report Lost</a></li>
+            <li class="nav-item"><a class="nav-link" href="#" onclick="redirectIfNotLoggedIn('{% url 'report_found' %}')">Report Found</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'search' %}">Search</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+            <li class="nav-item"><a class="nav-link" href="{% url 'signup' %}">Sign Up</a></li>
+        `;
+    }
+}
+
+setupNav();
+</script>
+
+{% block content %}
+{% endblock %}
+
+<!-- FOOTER -->
+<footer>
+    <div class="container text-center">
+        <p class="mb-2">&copy; 2025 Lost & Found. All rights reserved.</p>
+        <p>
+            <a href="{% url 'privacy_policy' %}">Privacy Policy</a> | 
+            <a href="{% url 'terms_of_service' %}">Terms of Service</a>
+        </p>
+    </div>
+</footer>
+
+<!-- BOOTSTRAP JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- FLOATING TRIANGLES JS -->
+<script>
+const container = document.getElementById('floating-items');
+
+function createTriangle(){
+    const tri = document.createElement('div');
+    tri.classList.add('floating-triangle');
+    
+    tri.style.left = Math.random() * window.innerWidth + 'px';
+    tri.style.top = window.innerHeight + 20 + 'px';
+    tri.style.width = 15 + Math.random() * 25 + 'px';
+    tri.style.height = tri.style.width;
+    tri.style.animationDuration = 30 + Math.random()*30 + 's';
+    tri.style.opacity = 0.3 + Math.random()*0.7;
+
+    container.appendChild(tri);
+
+    setTimeout(() => container.removeChild(tri), 65000);
+}
+
+// initial triangles
+for(let i=0;i<30;i++) createTriangle();
+// add new triangles every 2 seconds
+setInterval(createTriangle, 2000);
+</script>
+
+</body>
+</html>

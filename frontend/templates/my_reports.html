@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HERO TITLE -->
+<div class="hero-section" style="padding:60px 20px; text-align:center;">
+    <h1 style="font-size:3rem; color:#00fff7; margin-bottom:1rem;">My Reports & Claims</h1>
+    <p style="font-size:1.2rem; color:#fff; opacity:0.9;">Manage your lost and found items, and track claim activity.</p>
+</div>
+
+<div class="container py-5">
+
+    <!-- LOST ITEMS -->
+    <h2 style="color:#00fff7; margin-bottom:1rem;">My Lost Items</h2>
+    <div id="lost-items-container" class="mb-5"></div>
+
+    <!-- FOUND ITEMS -->
+    <h2 style="color:#00ff7f; margin-bottom:1rem;">My Found Items</h2>
+    <div id="found-items-container" class="mb-5"></div>
+
+    <!-- NOTIFICATIONS -->
+    <h2 style="color:#ffea00; margin-bottom:1rem;">Notifications</h2>
+    <div id="notifications-container" class="mb-5"></div>
+
+</div>
+
+<script>
+// ===== GET JWT ACCESS TOKEN =====
+const accessToken = localStorage.getItem("access_token");
+
+// Redirect if not logged in
+if(!accessToken){
+    alert("Please login to view your reports.");
+    window.location.href = "{% url 'login' %}?next={% url 'my_reports' %}";
+}
+
+// ===== DECODE JWT TO GET USER ID =====
+function parseJwt(token) {
+    try {
+        const payload = token.split('.')[1];
+        const decoded = JSON.parse(atob(payload));
+        return decoded;
+    } catch (err) {
+        console.error("Invalid JWT", err);
+        return null;
+    }
+}
+
+const tokenData = parseJwt(accessToken);
+const CURRENT_USER_ID = tokenData ? Number(tokenData.user_id) : null;
+if (!CURRENT_USER_ID) {
+    alert("Invalid token. Please login again.");
+    localStorage.removeItem("access_token");
+    window.location.href = "{% url 'login' %}?next={% url 'my_reports' %}";
+}
+
+// ===== HELPER: HANDLE PAGINATED OR SIMPLE RESULTS =====
+function getResultsArray(data){
+    return data.results || data;
+}
+
+// ===== SEND AUTHENTICATED REQUEST =====
+async function sendAuthenticatedRequest(url, options = {}) {
+    options.headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
+        ...options.headers
+    };
+    return fetch(url, options);
+}
+
+// ===== FETCH LOST ITEMS =====
+async function fetchLostItems() {
+    const container = document.getElementById("lost-items-container");
+    container.innerHTML = "<p>Loading lost items...</p>";
+
+    try {
+        const res = await sendAuthenticatedRequest("/api/lost-items/");
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const items = getResultsArray(data);
+
+        // FILTER OUT lost items with approved claims
+        const myLostItems = items.filter(i => i.user === CURRENT_USER_ID && !i.has_approved_claim);
+
+        if(myLostItems.length === 0){
+            container.innerHTML = "<p>No lost items reported yet.</p>";
+            return;
+        }
+
+        let html = "";
+        myLostItems.forEach(item => {
+            html += `
+            <div class="item-card lost-item">
+                <h4>${item.name}</h4>
+                <p><strong>Category:</strong> ${item.category}</p>
+                <p><strong>Location:</strong> ${item.location}</p>
+                <p><strong>Date Lost:</strong> ${item.date_lost}</p>
+                <p><strong>Description:</strong> ${item.description}</p>
+                <button onclick="viewMatches(${item.id})" class="btn hero-btn mt-2">View Matches</button>
+                <div id="matches-${item.id}" class="matches-container mt-2"></div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "<p>Error loading lost items.</p>";
+    }
+}
+
+// ===== FETCH FOUND ITEMS =====
+async function fetchFoundItems() {
+    const container = document.getElementById("found-items-container");
+    container.innerHTML = "<p>Loading found items...</p>";
+
+    try {
+        const res = await sendAuthenticatedRequest("/api/found-items/");
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const items = getResultsArray(data);
+
+        // Only show found items without approved claims
+        const myFoundItems = items.filter(i => i.user === CURRENT_USER_ID && !i.has_approved_claim);
+
+        if(myFoundItems.length === 0){
+            container.innerHTML = "<p>No found items reported yet.</p>";
+            return;
+        }
+
+        let html = "";
+        myFoundItems.forEach(item => {
+            html += `
+            <div class="item-card found-item">
+                <h4>${item.name}</h4>
+                <p><strong>Category:</strong> ${item.category}</p>
+                <p><strong>Location:</strong> ${item.location}</p>
+                <p><strong>Date Found:</strong> ${item.date_found}</p>
+                <p><strong>Description:</strong> ${item.description}</p>
+                <div id="claims-${item.id}" class="claims-container mt-2"></div>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+        myFoundItems.forEach(item => fetchClaimsForFoundItem(item.id));
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "<p>Error loading found items.</p>";
+    }
+}
+
+// ===== FETCH CLAIMS FOR FOUND ITEM =====
+async function fetchClaimsForFoundItem(foundItemId){
+    const container = document.getElementById(`claims-${foundItemId}`);
+    container.innerHTML = "<p>Loading claims...</p>";
+
+    try {
+        const res = await sendAuthenticatedRequest("/api/claims/");
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const claims = getResultsArray(data);
+
+        const relevantClaims = claims.filter(c => c.found_item_detail.id === foundItemId);
+
+        if(relevantClaims.length === 0){
+            container.innerHTML = "<p>No claims for this item.</p>";
+            return;
+        }
+
+        let html = "<h5>Pending Claims:</h5>";
+        relevantClaims.forEach(c => {
+            html += `
+            <div class="claim-card">
+                <p><strong>Claimed By:</strong> ${c.lost_owner_email}</p>
+                <p><strong>Item:</strong> ${c.lost_item_detail.name}</p>
+                <p><strong>Status:</strong> <span class="claim-status">${c.status}</span></p>
+                ${c.status === "Pending" ? `
+                    <button onclick="approveClaim(${c.id})" class="btn hero-btn mt-1">Approve</button>
+                    <button onclick="rejectClaim(${c.id})" class="btn hero-btn mt-1 btn-reject">Reject</button>
+                ` : ""}
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "<p>Error loading claims.</p>";
+    }
+}
+
+// ===== CLAIM FUNCTIONS =====
+async function claimItem(lostItemId, foundItemId){
+    try{
+        const res = await sendAuthenticatedRequest("/api/claims/", {
+            method: "POST",
+            body: JSON.stringify({ lost_item: lostItemId, found_item: foundItemId })
+        });
+        if(!res.ok) throw new Error(await res.text());
+        alert("Claim submitted successfully! Pending approval by found item owner.");
+        fetchLostItems();
+        fetchNotifications();
+        fetchFoundItems();
+    } catch(err){
+        console.error("Error submitting claim:",err);
+        alert("Error submitting claim.");
+    }
+}
+
+async function approveClaim(claimId){
+    try{
+        const res = await sendAuthenticatedRequest(`/api/claims/${claimId}/approve/`, { method: "POST" });
+        if(!res.ok) throw new Error(await res.text());
+        alert("Claim approved successfully!");
+        fetchFoundItems();
+        fetchNotifications();
+    } catch(err){
+        console.error(err);
+        alert("Error approving claim.");
+    }
+}
+
+async function rejectClaim(claimId){
+    try{
+        const res = await sendAuthenticatedRequest(`/api/claims/${claimId}/reject/`, { method: "POST" });
+        if(!res.ok) throw new Error(await res.text());
+        fetchFoundItems();
+        fetchNotifications();
+    } catch(err){
+        console.error(err);
+        alert("Error rejecting claim.");
+    }
+}
+
+// ===== FETCH NOTIFICATIONS =====
+async function fetchNotifications(){
+    const container = document.getElementById("notifications-container");
+    container.innerHTML = "<p>Loading notifications...</p>";
+
+    try{
+        const res = await sendAuthenticatedRequest("/api/claims/");
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const claims = getResultsArray(data);
+
+        const myClaims = claims.filter(c => 
+            (c.lost_item_owner_id === CURRENT_USER_ID) || 
+            (c.found_item_owner_id === CURRENT_USER_ID)
+        );
+
+        if(myClaims.length === 0){
+            container.innerHTML = "<p>No notifications yet.</p>";
+            return;
+        }
+
+        let html = "<ul>";
+        myClaims.forEach(c => {
+            if(c.lost_item_owner_id === CURRENT_USER_ID && c.status === "Pending"){
+                html += `<li>Someone claimed your lost item: <strong>${c.lost_item_detail.name}</strong></li>`;
+            }
+            if(c.lost_item_owner_id === CURRENT_USER_ID && c.status !== "Pending"){
+                html += `<li>Your claim for lost item "<strong>${c.lost_item_detail.name}</strong>" was ${c.status} by ${c.found_owner_email}</li>`;
+            }
+
+            if(c.found_item_owner_id === CURRENT_USER_ID && c.status === "Pending"){
+                html += `<li>You have a pending claim request for your found item: <strong>${c.found_item_detail.name}</strong> by ${c.lost_owner_email}</li>`;
+            }
+            if(c.found_item_owner_id === CURRENT_USER_ID && c.status !== "Pending"){
+                html += `<li>Your found item "<strong>${c.found_item_detail.name}</strong>" claim was ${c.status} by ${c.lost_owner_email}</li>`;
+            }
+        });
+        html += "</ul>";
+        container.innerHTML = html;
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "<p>Error loading notifications.</p>";
+    }
+}
+
+// ===== VIEW MATCHES =====
+async function viewMatches(lostItemId){
+    const container = document.getElementById(`matches-${lostItemId}`);
+    container.innerHTML = "<p>Loading matches...</p>";
+
+    try{
+        const res = await sendAuthenticatedRequest(`/api/lost-items/${lostItemId}/matches/`);
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const matches = getResultsArray(await res.json());
+
+        // Filter out found items with approved claims
+        const availableMatches = matches.filter(f => !f.has_approved_claim);
+
+        if(availableMatches.length === 0){
+            container.innerHTML = "<p>No matches found.</p>";
+            return;
+        }
+
+        let html = "<h5>Matching Found Items:</h5>";
+        availableMatches.forEach(f => {
+            html += `
+            <div class="match-card">
+                <p><strong>Name:</strong> ${f.name}</p>
+                <p><strong>Category:</strong> ${f.category}</p>
+                <p><strong>Location:</strong> ${f.location}</p>
+                <p><strong>Date Found:</strong> ${f.date_found}</p>
+                <p><strong>Description:</strong> ${f.description}</p>
+                <button onclick="claimItem(${lostItemId}, ${f.id})" class="btn hero-btn mt-1">Claim</button>
+            </div>`;
+        });
+
+        container.innerHTML = html;
+
+    } catch(err){
+        console.error(err);
+        container.innerHTML = "<p>Error loading matches.</p>";
+    }
+}
+
+// ===== INITIAL FETCH =====
+fetchLostItems();
+fetchFoundItems();
+fetchNotifications();
+
+</script>
+
+<style>
+.item-card {
+    background: rgba(255,255,255,0.05);
+    padding:20px;
+    margin-bottom:20px;
+    border-radius:20px;
+    border:1px solid rgba(0,255,247,0.3);
+    box-shadow:0 0 20px rgba(0,255,247,0.2);
+    color:#fff;
+}
+.item-card.lost-item { border-left: 5px solid #00fff7; }
+.item-card.found-item { border-left: 5px solid #00ff7f; }
+.claim-card, .match-card {
+    background: rgba(0,0,0,0.3);
+    padding:12px;
+    margin:10px 0;
+    border-radius:10px;
+}
+.claim-card .claim-status {
+    font-weight:bold;
+}
+.btn.hero-btn { width:auto; margin-top:5px; }
+.btn-reject { background-color: #ff4444; border-color: #ff4444; }
+.matches-container { margin-top:10px; }
+@media(max-width:768px){
+    .item-card { padding:15px; }
+    .claim-card, .match-card { padding:10px; }
+}
+</style>
+
+{% endblock %}

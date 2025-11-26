@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="signup-card mx-auto" style="max-width:400px; padding:2rem; background: rgba(255,255,255,0.05); box-shadow: 0 15px 40px rgba(0,255,247,0.3); border-radius:20px;">
+
+        <h2 style="color:#00fff7; text-align:center; margin-bottom:20px;">Create Account</h2>
+
+        <form id="signup-form">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="username" style="color:#00fff7; font-weight:600;">Username</label>
+                <input type="text" id="username" name="username" class="form-control" placeholder="Enter username"
+                       required style="background: rgba(0,0,0,0.5); color:#fff; border:1px solid #00fff7;">
+            </div>
+
+            <div class="mb-3">
+                <label for="email" style="color:#00fff7; font-weight:600;">Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="Enter email"
+                       required style="background: rgba(0,0,0,0.5); color:#fff; border:1px solid #00fff7;">
+            </div>
+
+            <div class="mb-3">
+                <label for="password" style="color:#00fff7; font-weight:600;">Password</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Enter password"
+                       required style="background: rgba(0,0,0,0.5); color:#fff; border:1px solid #00fff7;">
+            </div>
+
+            <div class="mb-3">
+                <label for="password2" style="color:#00fff7; font-weight:600;">Confirm Password</label>
+                <input type="password" id="password2" name="password2" class="form-control" placeholder="Confirm password"
+                       required style="background: rgba(0,0,0,0.5); color:#fff; border:1px solid #00fff7;">
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn hero-btn">Sign Up</button>
+            </div>
+
+            <p style="color:#fff; text-align:center; margin-top:15px;">Already have an account? <a href="{% url 'login' %}" style="color:#00fff7;">Login</a></p>
+        </form>
+    </div>
+</div>
+
+<script>
+document.getElementById("signup-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("username").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+    const password2 = document.getElementById("password2").value;
+
+    if(password !== password2){
+        alert("Passwords do not match!");
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/users/", {  // Matches UserViewSet
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, email, password })
+        });
+
+        if(!res.ok) {
+            const errorData = await res.json().catch(() => null);
+            const msg = errorData ? JSON.stringify(errorData) : `HTTP ${res.status}`;
+            alert("Sign up failed: " + msg);
+            return;
+        }
+
+        alert("Account created successfully! Please login.");
+        window.location.href = "{% url 'login' %}";
+
+    } catch(err) {
+        alert("Sign up failed. Check console.");
+        console.error("Signup error:", err);
+    }
+});
+</script>
+
+<style>
+.signup-card input { margin-bottom:12px; }
+.signup-card button { margin-top:10px; }
+.signup-card { transition: 0.3s; }
+.signup-card:hover { transform: translateY(-5px); box-shadow: 0 0 50px rgba(0,255,247,0.5); }
+</style>
+
+{% endblock %}

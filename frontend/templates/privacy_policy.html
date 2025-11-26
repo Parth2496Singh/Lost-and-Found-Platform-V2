@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+
+<!-- HERO TITLE -->
+<div class="hero-section" style="padding:60px 20px; text-align:center; background: rgba(0,0,0,0.3);">
+    <h1 class="hero-title">Privacy Policy</h1>
+    <p class="hero-subtitle">Your privacy matters. Learn how we handle your data on Lost & Found Platform.</p>
+</div>
+
+<!-- CONTENT CARD -->
+<div class="container my-5">
+    <div class="privacy-card mx-auto">
+        
+        <h3>1. Introduction</h3>
+        <p>Lost & Found Platform values your privacy. This Privacy Policy explains what data we collect and how we use it to provide our services.</p>
+
+        <h3>2. Data Collection</h3>
+        <p>We collect information when you report lost or found items, including:</p>
+        <ul>
+            <li>Item name</li>
+            <li>Category (Phone, Wallet, Bag, Laptop, Keys, Other)</li>
+            <li>Location</li>
+            <li>Description</li>
+            <li>Date lost or found</li>
+        </ul>
+
+        <h3>3. How We Use Your Data</h3>
+        <p>Your data is used to:</p>
+        <ul>
+            <li>Match lost and found items</li>
+            <li>Display items on dashboards</li>
+            <li>Improve our services</li>
+        </ul>
+
+        <h3>4. Data Sharing</h3>
+        <p>We do not sell or share your personal information with third parties, except when necessary to provide matching services.</p>
+
+        <h3>5. Data Security</h3>
+        <p>We implement industry-standard security measures to protect your data from unauthorized access.</p>
+
+        <h3>6. Cookies & Analytics</h3>
+        <p>We may use cookies for analytics and to improve site functionality. No personal data is sold.</p>
+
+        <h3>7. Your Rights</h3>
+        <p>You can request deletion of your data at any time by contacting our support team at <a href="mailto:support@lostfound.com">support@lostfound.com</a>.</p>
+
+        <h3>8. Updates to This Policy</h3>
+        <p>We may update this Privacy Policy periodically. All changes will be posted on this page.</p>
+
+        <h3>9. Contact</h3>
+        <p>If you have questions or concerns about your privacy, please contact us at <a href="mailto:support@lostfound.com">support@lostfound.com</a>.</p>
+
+    </div>
+</div>
+
+<style>
+.hero-title {
+    font-size: 2.5rem;
+    color: #00fff7;
+    margin-bottom: 0.5rem;
+}
+.hero-subtitle {
+    font-size: 1.1rem;
+    color: #fff;
+    opacity: 0.9;
+}
+
+.privacy-card {
+    max-width: 900px;
+    width: 90%;
+    margin: auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 20px;
+    box-shadow: 0 15px 50px rgba(0, 255, 247, 0.2);
+    color: #fff;
+    line-height: 1.6;
+    transition: transform 0.3s;
+}
+.privacy-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 60px rgba(0, 255, 247, 0.3);
+}
+.privacy-card h3 {
+    color: #00fff7;
+    margin-top: 1.5rem;
+    margin-bottom: 0.7rem;
+    font-size: 1.3rem;
+}
+.privacy-card ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+.privacy-card a {
+    color: #ff00ff;
+    text-decoration: underline;
+}
+@media (max-width: 768px) {
+    .hero-title { font-size: 2rem; }
+    .hero-subtitle { font-size: 1rem; }
+    .privacy-card { padding: 1.5rem; }
+    .privacy-card h3 { font-size: 1.2rem; }
+}
+@media (max-width: 480px) {
+    .hero-title { font-size: 1.6rem; }
+    .hero-subtitle { font-size: 0.95rem; }
+    .privacy-card { padding: 1rem; }
+    .privacy-card h3 { font-size: 1.1rem; }
+}
+</style>
+
+{% endblock %}
