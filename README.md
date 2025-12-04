@@ -39,6 +39,8 @@ This platform was designed for educational purposes and hands-on experience with
 
 * Report found items
 
+* Dashboard for lost/found items
+
 * Basic item cards and UI
 
 **V2 (Current version):**
@@ -53,11 +55,11 @@ This platform was designed for educational purposes and hands-on experience with
 
 * Dynamic frontend with vanilla JS for fetching API data
 
-* Polished UI with floating triangle animations, responsive cards, gradient buttons
+* Enhanced and polished UI
 
 ## 3. Tech Stack
 
-* **Backend:** Django, Django REST Framework  
+* **Backend:** Python, Django, Django REST Framework  
 * **Frontend:** HTML, CSS, Bootstrap 5 (fully AI-generated)  
 * **Database:** SQLite (development)  
 * **Version Control:** Git, GitHub
