@@ -81,8 +81,8 @@ requirements.txt # Python dependencies
 1. Clone the repository:
 
 ```bash
-git clone <repo-url>
-cd Lost-and-Found-Platform-V1
+git clone https://github.com/Parth2496Singh/Lost-and-Found-Platform-V2.git
+cd Lost-and-Found-Platform-V2
 ```
 
 2. Create a virtual environment:
@@ -93,7 +93,7 @@ python -m venv env
 
 3. Activate the environment:
 
-* **Windows:** `env\Scripts\activate`  
+* **Windows:** `.\env\Scripts\activate.PS1`  
 * **Linux/Mac:** `source env/bin/activate`
 
 4. Install dependencies:
