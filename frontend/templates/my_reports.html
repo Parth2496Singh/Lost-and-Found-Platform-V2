@@ -257,20 +257,28 @@ async function fetchNotifications(){
 
         let html = "<ul>";
         myClaims.forEach(c => {
-            if(c.lost_item_owner_id === CURRENT_USER_ID && c.status === "Pending"){
-                html += `<li>Someone claimed your lost item: <strong>${c.lost_item_detail.name}</strong></li>`;
-            }
-            if(c.lost_item_owner_id === CURRENT_USER_ID && c.status !== "Pending"){
-                html += `<li>Your claim for lost item "<strong>${c.lost_item_detail.name}</strong>" was ${c.status} by ${c.found_owner_email}</li>`;
+    // ---- Lost item owner notifications ----
+            if (c.lost_item_owner_id === CURRENT_USER_ID) {
+                if (c.lost_item_detail.user !== CURRENT_USER_ID && c.status === "Pending") {
+            // Someone else claimed your lost item
+                    html += `<li>Someone claimed your lost item: <strong>${c.lost_item_detail.name}</strong></li>`;
+                } else if (c.lost_item_detail.user === CURRENT_USER_ID && c.status !== "Pending") {
+            // Your claim status update
+                    html += `<li>Your claim for lost item "<strong>${c.lost_item_detail.name}</strong>" was ${c.status} by ${c.found_owner_email}</li>`;
+                }
             }
 
-            if(c.found_item_owner_id === CURRENT_USER_ID && c.status === "Pending"){
-                html += `<li>You have a pending claim request for your found item: <strong>${c.found_item_detail.name}</strong> by ${c.lost_owner_email}</li>`;
-            }
-            if(c.found_item_owner_id === CURRENT_USER_ID && c.status !== "Pending"){
-                html += `<li>Your found item "<strong>${c.found_item_detail.name}</strong>" claim was ${c.status} by ${c.lost_owner_email}</li>`;
+    // ---- Found item owner notifications ----
+            if (c.found_item_owner_id === CURRENT_USER_ID) {
+                if (c.status === "Pending") {
+                    html += `<li>You have a pending claim request for your found item: <strong>${c.found_item_detail.name}</strong> by ${c.lost_owner_email}</li>`;
+                } else {
+                    html += `<li>Your found item "<strong>${c.found_item_detail.name}</strong>" claim was ${c.status} by ${c.lost_owner_email}</li>`;
+                }   
             }
         });
+
+
         html += "</ul>";
         container.innerHTML = html;
 

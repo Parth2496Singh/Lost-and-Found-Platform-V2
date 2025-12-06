@@ -89,6 +89,7 @@ class ClaimViewSet(viewsets.ModelViewSet):
         try:
             lost_item_id = self.request.data.get("lost_item")
             found_item_id = self.request.data.get("found_item")
+            user = self.request.user
 
             lost_item = get_object_or_404(LostItems, id=lost_item_id)
             found_item = get_object_or_404(FoundItem, id=found_item_id)
@@ -96,6 +97,18 @@ class ClaimViewSet(viewsets.ModelViewSet):
             # Optional: prevent claiming own item
             if found_item.user == self.request.user:
                 raise serializers.ValidationError("You cannot claim your own lost item.")
+
+            # 🚫 Prevent duplicate claim unless it was rejected
+            existing_claim = Claim.objects.filter(
+                lost_item=lost_item,
+                found_item=found_item,
+                lost_item__user=user  # user who owns the lost item
+            ).exclude(status="Rejected").first()
+
+            if existing_claim:
+                raise serializers.ValidationError(
+                    "You already claimed this item. Wait until it is approved or rejected."
+            )
 
             serializer.save(lost_item=lost_item, found_item=found_item)
 

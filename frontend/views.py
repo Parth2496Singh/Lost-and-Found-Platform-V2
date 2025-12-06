@@ -65,11 +65,4 @@ def login_view(request):
     return render(request, "login.html", {"next": next_url})
 
 def my_reports(request):
-    """
-    Render the 'My Reports' page for logged-in users.
-    """
-    if not request.user.is_authenticated:
-        # Redirect to login if not logged in
-        return redirect(f"/login/?next=/my-reports/")
-
     return render(request, "my_reports.html")
