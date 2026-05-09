@@ -1,6 +1,6 @@
 # 🚀 Lost & Found Platform (V2 & DevOps Updates)
 
-![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white) ![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) ![Docker Compose](https://img.shields.io/badge/Docker_Compose-003F8C?style=for-the-badge&logo=docker&logoColor=white) ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white) ![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white) ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white) ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
+![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white) ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white) ![Docker Compose](https://img.shields.io/badge/Docker_Compose-003F8C?style=for-the-badge&logo=docker&logoColor=white) ![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white) ![Helm](https://img.shields.io/badge/Helm-0F1689?style=for-the-badge&logo=helm&logoColor=white) ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white) ![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white) ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white) ![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)
 
 A full-stack Lost & Found web application with modern DevOps integration including Docker, Nginx, Kubernetes, and Helm support.
 
@@ -253,6 +253,47 @@ All protected endpoints require:
 `Authorization: Bearer <access_token>`
 
 ---
+
+# 📸 Screenshots
+
+## Home Page
+
+<img width="2876" height="1496" alt="Screenshot from 2026-05-09 18-57-45" src="https://github.com/user-attachments/assets/87b0156f-7ad1-402f-b358-f80ea3f34a67" />
+
+
+---
+
+## Login Page
+
+<img width="2876" height="1485" alt="Screenshot from 2026-05-09 18-59-04" src="https://github.com/user-attachments/assets/ee137737-8cd7-488e-8956-01baec977bdd" />
+
+
+---
+
+## User Dashboard
+
+<img width="2876" height="1496" alt="Screenshot from 2026-05-09 18-58-13" src="https://github.com/user-attachments/assets/65031713-3534-4d70-9d71-748a34257178" />
+
+---
+
+## API
+
+<img width="2876" height="986" alt="Screenshot from 2026-05-09 18-58-42" src="https://github.com/user-attachments/assets/b2c3ab75-7d68-4213-9af9-47f117c31e91" />
+
+---
+
+
+## Kubernetes Pods
+
+<img width="2854" height="765" alt="Screenshot from 2026-05-09 19-04-35" src="https://github.com/user-attachments/assets/278577f1-e5d9-424c-a03f-7516d8e4131a" />
+
+
+---
+
+## Grafana Monitoring
+
+<img width="2872" height="1505" alt="Screenshot from 2026-05-09 19-14-36" src="https://github.com/user-attachments/assets/5f3aaacb-588e-4b9d-a673-309d23a4765f" />
+
 
 ## ⚠️ Known Issues / Limitations
 
