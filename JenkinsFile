@@ -1,0 +1,46 @@
+@Library("Shared") _
+pipeline {
+    agent {label "vinod"}
+    
+    stages{
+        stage("Hello"){
+            steps{
+                script{
+                    hello()
+                }
+            }
+        }
+        stage("Code"){
+            steps{
+                script{
+                    clone("https://github.com/Parth2496Singh/Lost-and-Found-Platform-V2.git", "main")
+                }
+            }
+        }
+        stage("Build"){
+            steps{
+                script{
+                    build("parthsingh2496", "django-jenkins", "latest")
+                }
+            }
+        }
+        stage("Push to Dockerhub"){
+            steps{
+                script{
+                    dockerhub_push("django-jenkins", "latest", "parthsingh2496")
+                }
+            }
+        }
+        stage("Testing"){
+            steps{
+            echo "Testing the code"
+            }
+        }
+        stage("Deploy"){
+            steps{
+            echo "Deploying the code"
+            sh "docker compose up -d"
+            }
+        }
+    }
+}
