@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: lost-and-found
-        image: parthsingh2496/lostfound-image:latest
+        image: parthsingh2496/django-jenkins:latest
         ports:
         - containerPort: 8000
         resources:
