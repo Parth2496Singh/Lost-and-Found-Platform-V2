@@ -45,7 +45,7 @@ pipeline {
             steps{
                 sh """
                 kubectl apply -f k8s/
-                
+                kubectl port-forward svc/lost-and-found-service -n lost-and-found 8000:8000 --address=0.0.0.0 &
                 """
             }
         }
