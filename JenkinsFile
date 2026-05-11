@@ -1,24 +1,8 @@
 @Library("Shared") _
 
 pipeline {
-    agent {
-        kubernetes {
-            yaml '''
-apiVersion: v1
-kind: Pod
-spec:
-  containers:
-  - name: kaniko
-    image: gcr.io/kaniko-project/executor:debug
-    command: ["sleep"]
-    args: ["99d"]
-  - name: kubectl
-    image: bitnami/kubectl:latest
-    command: ["sleep"]
-    args: ["99d"]
-'''
-        }
-    }
+    agent {label 'vinod'} 
+       
     
     stages {
         stage("Pipeline_Begin"){
@@ -58,10 +42,12 @@ spec:
                 // SWITCH TO THE KUBECTL CONTAINER 🛰️
                 container('kubectl') {
                     script {
-
-                        sh "kubectl apply -f k8s/namespace.yml"
-                        sh "kubectl apply -f k8s/deployment.yaml"
-                        sh "kubectl apply -f k8s/service.yaml"
+                        withKubeConfig([credentialsId: 'k8s-secret']) {
+                            sh """
+                                kubectl apply -f k8s/namespace.yml --insecure-skip-tls-verify
+                                kubectl apply -f k8s/deployment.yaml --insecure-skip-tls-verify
+                                kubectl apply -f k8s/service.yaml --insecure-skip-tls-verify
+                            """
                     }
                 }
             }
