@@ -1,66 +1,68 @@
 @Library("Shared") _
+
 pipeline {
-    agent {label "vinod"}
+    agent {
+        kubernetes {
+            yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: kaniko
+    image: gcr.io/kaniko-project/executor:debug
+    command: ["sleep"]
+    args: ["99d"]
+  - name: kubectl
+    image: bitnami/kubectl:latest
+    command: ["sleep"]
+    args: ["99d"]
+'''
+        }
+    }
     
-    stages{
+    stages {
         stage("Pipeline_Begin"){
-            steps{
-                echo "this pipeline is now starting"
+            steps {
+                echo "🚀 Jenkins is now running inside a dynamic Kubernetes Pod!"
             }
         }
+
         stage("Hello"){
-            steps{
-                script{
-                    hello()
-                }
+            steps {
+                script { hello() }
             }
         }
+
         stage("Code"){
-            steps{
-                script{
+            steps {
+                // This runs in the default 'jnlp' container (the Jenkins agent)
+                script {
                     clone("https://github.com/Parth2496Singh/Lost-and-Found-Platform-V2.git", "main")
                 }
             }
         }
-        stage("Build"){
-            steps{
-                script{
-                    build("django-jenkins", "latest")
+
+        stage("Build & Push"){
+            steps {
+                // Use Kaniko here if your library supports it, 
+                // or ensure your library 'build' step points to a container that can build.
+                container('kaniko') {
+                    echo "🏗️ Building image using Kaniko..."
+                    // script { build("django-jenkins", "latest") }
                 }
             }
         }
-        stage("Push to Dockerhub"){
-            steps{
-                script{
-                    dockerhub_push("django-jenkins", "latest", "parthsingh2496")
-                }
-            }
-        }
-        stage("Testing"){
-            steps{
-            echo "Testing the code"
-            }
-        }
-        stage("Deploy"){
-            steps{
-            echo "Deploying the code"
-            sh "docker compose down && docker compose up -d"
-            }
-        }
+
         stage("Deploy to K8s") {
             steps {
-                script {
-                    withKubeConfig([credentialsId: 'k8s-secret', serverUrl: '']) {
-                        sh """
-                            export no_proxy=127.0.0.1,localhost
-                            export NO_PROXY=127.0.0.1,localhost
-                            unset http_proxy
-                            unset https_proxy
-                            
-                            kubectl cluster-info --kubeconfig=\$KUBECONFIG
-                            kubectl apply -f k8s/namespace.yml --validate=false
-                        """
-                        }
+                // SWITCH TO THE KUBECTL CONTAINER 🛰️
+                container('kubectl') {
+                    script {
+
+                        sh "kubectl apply -f k8s/namespace.yml"
+                        sh "kubectl apply -f k8s/deployment.yaml"
+                        sh "kubectl apply -f k8s/service.yaml"
+                    }
                 }
             }
         }
