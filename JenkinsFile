@@ -39,11 +39,9 @@ pipeline {
             steps {
                 script {
                     withKubeConfig([credentialsId: 'k8s-secret']) {
-                        sh """
-                            kubectl apply -f k8s/namespace.yml --insecure-skip-tls-verify
-                            kubectl apply -f k8s/deployment.yaml --insecure-skip-tls-verify
-                            kubectl apply -f k8s/service.yaml --insecure-skip-tls-verify
-                        """
+                        sh "export http_proxy='' && export https_proxy='' && kubectl apply -f k8s/namespace.yml --insecure-skip-tls-verify"
+                        sh "export http_proxy='' && export https_proxy='' && kubectl apply -f k8s/deployment.yaml --insecure-skip-tls-verify"
+                        sh "export http_proxy='' && export https_proxy='' && kubectl apply -f k8s/service.yaml --insecure-skip-tls-verify"
                     }
                 }
             }
