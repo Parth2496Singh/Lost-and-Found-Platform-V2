@@ -41,10 +41,12 @@ pipeline {
             echo "Testing the code"
             }
         }
-        stage("Deploy"){
+        stage("Deploy to Kubernetes"){
             steps{
-            echo "Deploying the code"
-            sh "docker compose down && docker compose up -d"
+                sh """
+                kubectl apply -f k8s/
+                
+                """
             }
         }
     }
