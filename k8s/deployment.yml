@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: lost-and-found
-        image: parthsingh2496/django-jenkins:latest
+        image: parthsingh2496/django-jenkins:v1.0.0
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
