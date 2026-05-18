@@ -1,53 +1,51 @@
 @Library("Shared") _
 pipeline {
-    agent {label "vinod"}
+    agent { label "vinod" }
     
-    stages{
-        stage("Pipeline_Begin"){
-            steps{
-                echo "this pipeline is now starting"
+    environment {
+        // Dynamically create a SemVer tag using the Jenkins Build Number
+        IMAGE_TAG = "v1.0.${env.BUILD_NUMBER}"
+    }
+    
+    stages {
+        stage("Pipeline_Begin") {
+            steps {
+                echo "Starting CI Pipeline for Build Number: ${env.IMAGE_TAG}"
             }
         }
-        stage("Hello"){
-            steps{
-                script{
+        stage("Hello") {
+            steps {
+                script {
                     hello()
                 }
             }
         }
-        stage("Code"){
-            steps{
-                script{
+        stage("Code") {
+            steps {
+                script {
                     clone("https://github.com/Parth2496Singh/Lost-and-Found-Platform-V2.git", "main")
                 }
             }
         }
-        stage("Build"){
-            steps{
-                script{
-                    build("django-jenkins", "latest")
+        stage("Build") {
+            steps {
+                script {
+   
+                    build("lost-found-ultra", "${env.IMAGE_TAG}")
                 }
             }
         }
-        stage("Push to Dockerhub"){
-            steps{
-                script{
-                    dockerhub_push("django-jenkins", "latest", "parthsingh2496")
+        stage("Push to Dockerhub") {
+            steps {
+                script {
+               
+                    dockerhub_push("lost-found-ultra", "${env.IMAGE_TAG}", "parthsingh2496")
                 }
             }
         }
-        stage("Testing"){
-            steps{
-            echo "Testing the code"
-            }
-        }
-        stage("Deploy to Kubernetes"){
-            steps{
-                sh """
-                kubectl apply -f k8s/namespace.yml
-                sleep 5
-                kubectl apply -f k8s/
-                """
+        stage("Testing") {
+            steps {
+                echo "Testing the code"
             }
         }
     }
