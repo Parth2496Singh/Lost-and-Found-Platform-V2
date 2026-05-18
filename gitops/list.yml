@@ -29,7 +29,7 @@ spec:
     spec:
       project: default
       source:
-        repoURL: https://github.com/Parth2496Singh/Lost-and-Found-Platform-V2.git
+        repoURL: https://github.com/Parth2496Singh/Lost-and-Found-GitOps.git
         targetRevision: main
         path: '{{path}}'                # resolved from element
       destination:
