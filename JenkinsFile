@@ -5,6 +5,8 @@ pipeline {
     environment {
         // Dynamically create a SemVer tag using the Jenkins Build Number
         IMAGE_TAG = "v1.0.${env.BUILD_NUMBER}"
+
+        SONAR_HOME = tool "Sonar" 
     }
     
     stages {
@@ -27,10 +29,37 @@ pipeline {
                 }
             }
         }
+        stage("Trivy: Filesystem scan") {
+            steps {
+                script {
+                    trivy_scan()
+                }
+            }
+        }
+        stage("OWASP: Dependency check") {
+            steps {
+                script {
+                    owasp_dependency()
+                }
+            }
+        }
+        stage("SonarQube: Code Analysis") {
+            steps {
+                script {
+                    sonarqube_analysis("Sonar", "lost-found-ultra", "lost-found-ultra")
+                }
+            }
+        }
+        stage("SonarQube: Code Quality Gates") {
+            steps {
+                script {
+                    sonarqube_code_quality()
+                }
+            }
+        }
         stage("Build") {
             steps {
                 script {
-   
                     build("lost-found-ultra", "${env.IMAGE_TAG}")
                 }
             }
@@ -38,14 +67,8 @@ pipeline {
         stage("Push to Dockerhub") {
             steps {
                 script {
-               
                     dockerhub_push("lost-found-ultra", "${env.IMAGE_TAG}", "parthsingh2496")
                 }
-            }
-        }
-        stage("Testing") {
-            steps {
-                echo "Testing the code"
             }
         }
     }
