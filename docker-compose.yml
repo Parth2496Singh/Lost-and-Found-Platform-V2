@@ -11,7 +11,7 @@ services:
         depends_on:
             - django-app
     django-app:
-        image: "parthsingh2496/django-jenkins:latest"
+        image: "parthsingh2496/lost-found-ultra"
         container_name: django-app
         networks:
             - django-networks
