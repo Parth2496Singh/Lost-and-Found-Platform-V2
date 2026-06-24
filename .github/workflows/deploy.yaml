@@ -1,0 +1,27 @@
+name: Deploy to AWS ECR
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  
+
+  backend:
+    uses: ./.github/workflows/ecr-build-push.yml
+    with:
+      service_name: backend
+      docker_context: ./backend
+      dockerfile_path: ./backend/Dockerfile
+      image_tag: v1.0.${{ github.run_number }}
+    secrets: inherit
+
+  order_service:
+    uses: ./.github/workflows/ecr-build-push.yml
+    with:
+      service_name: order-service
+      docker_context: ./order-service
+      image_tag: v1.0.${{ github.run_number }}
+    secrets: inherit
