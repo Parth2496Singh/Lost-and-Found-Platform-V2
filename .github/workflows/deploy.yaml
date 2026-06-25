@@ -17,3 +17,12 @@ jobs:
       dockerfile_path: ./Dockerfile
       image_tag: v1.0.${{ github.run_number }}
     secrets: inherit
+    
+  nginx:
+    uses: ./.github/workflows/ecr-build-push.yaml
+    with:
+      service_name: lost-found/nginx  #ECR repo name
+      docker_context: ./nginx
+      dockerfile_path: ./nginx/Dockerfile
+      image_tag: v1.0.${{ github.run_number }}
+    secrets: inherit
