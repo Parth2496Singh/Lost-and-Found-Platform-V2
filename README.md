@@ -1,6 +1,6 @@
 <div align="center">
   <h1>🚀 Lost & Found Platform (Enterprise Edition)</h1>
-  <p>A full-stack, cloud-native application featuring an enterprise-grade GitOps workflow, Infrastructure as Code, and automated DevSecOps pipelines.</p>
+  <p>A full-stack, cloud-native application featuring automated Infrastructure as Code (Terraform) and robust GitHub Actions CI/CD pipelines deployed to AWS EC2.</p>
 
   <!-- Badges -->
   <p>
@@ -9,8 +9,11 @@
     <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
     <img src="https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white" alt="Kubernetes" />
     <img src="https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white" alt="Terraform" />
-    <img src="https://img.shields.io/badge/AWS-232F3E?style=for-the-badge&logo=amazon-aws&logoColor=white" alt="AWS" />
+    <img src="https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazonaws&logoColor=white" alt="AWS EC2" />
+    <img src="https://img.shields.io/badge/Amazon_S3-569A31?style=for-the-badge&logo=amazons3&logoColor=white" alt="Amazon S3" />
+    <img src="https://img.shields.io/badge/Amazon_DynamoDB-4053D6?style=for-the-badge&logo=amazondynamodb&logoColor=white" alt="Amazon DynamoDB" />
     <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white" alt="GitHub Actions" />
+    <img src="https://img.shields.io/badge/Jenkins-D24939?style=for-the-badge&logo=Jenkins&logoColor=white" alt="Jenkins" />
     <img src="https://img.shields.io/badge/ArgoCD-EF7B4D?style=for-the-badge&logo=argo&logoColor=white" alt="ArgoCD" />
     <img src="https://img.shields.io/badge/SonarQube-4E9BCD?style=for-the-badge&logo=sonarqube&logoColor=white" alt="SonarQube" />
   </p>
@@ -38,36 +41,36 @@
 
 The **Lost & Found Platform** is a scalable, full-stack web application designed to help users report lost items, find misplaced belongings, and seamlessly claim them. 
 
-Evolving from a monolithic application into a highly distributed, cloud-native enterprise project, the platform now boasts **Infrastructure as Code (IaC)**, fully automated **GitHub Actions CI/CD pipelines**, and a robust **GitOps workflow** utilizing ArgoCD for zero-downtime Kubernetes deployments.
+Evolving from a monolithic application into a highly automated, cloud-native enterprise project, the platform now boasts **Infrastructure as Code (IaC)** via Terraform and fully automated **GitHub Actions CI/CD pipelines** that deploy seamlessly to AWS EC2.
 
 ---
 
 ## ✨ Features & Version History
 
 - **V1 & V2 (Application Base):** JWT Authentication, robust claim system with approval/rejection workflows, dynamic user dashboard, and a vanilla JavaScript frontend over a Django REST backend.
-- **V3 (Containerization):** Complete Dockerization, production-grade Nginx reverse proxy routing, and Kubernetes Helm charts for dynamic deployments.
-- **V4 (DevSecOps & GitOps):** Dual-repository GitOps architecture, automated DevSecOps pipelines (Trivy, OWASP, SonarQube), and ArgoCD continuous delivery with Image Updater integrations.
+- **V3 (Containerization & Local K8s):** Complete Dockerization and production-grade Nginx reverse proxy routing. Introduction of Kubernetes (KIND) for local testing.
+- **V4 (DevSecOps):** Automated DevSecOps pipelines (Trivy, OWASP, SonarQube) for security and code quality gates.
 - **🚀 V5 (Enterprise Automation & IaC):** 
-  - **Terraform Integration:** Fully automated provisioning of AWS infrastructure (EC2, security groups, remote state management).
-  - **GitHub Actions Pipelines:** Streamlined CI/CD workflows, integrating testing, building, and ECR pushing directly from GitHub.
+  - **Terraform Integration:** One-command automated provisioning of the entire AWS infrastructure, including EC2 servers, Security Groups, remote state management, and Elastic Container Registries (ECR).
+  - **GitHub Actions CI/CD:** Highly modular, reusable workflows (`ecr-build-push.yaml`) pushing Docker images to ECR, followed by automated deployments to the EC2 instances.
 
 ---
 
 ## 🏗️ Architecture
 
-The platform operates on a **Dual-Repo GitOps Architecture** to prevent infinite CI loops and ensure strict separation of concerns between code and infrastructure.
+The platform utilizes an automated **Terraform to EC2** architecture. The infrastructure (EC2, ECR) is completely codified, and deployments are handled by GitHub Actions pushing images to ECR and updating the EC2 server.
 
 ```mermaid
 flowchart TB
-    Client([👤 Client/User]) -->|HTTP/HTTPS| NGINX[Ingress / NGINX Proxy]
+    Client([👤 Client/User]) -->|HTTP/HTTPS| NGINX[Nginx Reverse Proxy]
     
-    subgraph AWS Cloud [AWS Infrastructure provisioned by Terraform]
+    subgraph AWS Cloud [AWS Infrastructure (Terraform Provisioned)]
         subgraph AWS ECR [Elastic Container Registry]
             BackendRepo[lost-found/backend]
             NginxRepo[lost-found/nginx]
         end
         
-        subgraph AWS EC2 [AWS EC2 / Kubernetes Cluster]
+        subgraph AWS EC2 [AWS EC2 Instance]
             NGINX --> Frontend[Frontend Assets]
             NGINX --> API[Django REST API]
             
@@ -78,12 +81,11 @@ flowchart TB
         end
     end
     
-    BackendRepo -.->|Pulled by K8s| API
-    NginxRepo -.->|Pulled by K8s| NGINX
+    BackendRepo -.->|Pulled via CI / User Data| API
+    NginxRepo -.->|Pulled via CI / User Data| NGINX
 ```
 
-1. **Source Code Repository (This Repo):** Contains application logic (Django, React/Vanilla JS), `Dockerfile`, `docker-compose.yml`, Terraform IaC, and GitHub Actions workflows.
-2. **Infrastructure Repository:** Contains Helm charts and ArgoCD deployment manifests (`ApplicationSet`, ConfigMaps for SMTP notifications).
+**Repository Structure:** Contains application logic (Django, Vanilla JS), `Dockerfile`, `docker-compose.yml`, Terraform IaC (`main.tf`, `ecr.tf`, etc.), and modular GitHub Actions workflows.
 
 <details>
 <summary><b>📂 View Full Project Structure</b></summary>
@@ -200,47 +202,42 @@ Lost-and-Found-Platform-Django.git/
 │   │   ├── s3.tf
 │   │   └── terraform.tf
 │   └── terraform.tf
-└── velzion.yaml
 ```
 </details>
 
 ---
 
-## 🚀 CI/CD & GitOps Workflows
+## 🚀 CI/CD Workflows (GitHub Actions)
 
-This project utilizes cutting-edge automation to take code from a developer's machine to the cloud with zero manual intervention.
+This project utilizes cutting-edge automation to take code from a developer's machine to the EC2 server with zero manual intervention, relying exclusively on modular GitHub Actions.
 
 ```mermaid
 sequenceDiagram
     participant Dev as Developer
-    participant Git as GitHub (Source Repo)
-    participant GHA as GitHub Actions
-    participant ECR as AWS ECR (Terraform Provisioned)
-    participant ArgoU as ArgoCD Image Updater
-    participant Infra as GitHub (GitOps Repo)
-    participant Argo as ArgoCD
-    participant K8s as Kubernetes Cluster
+    participant Git as GitHub
+    participant GHA_Deploy as deploy.yaml
+    participant GHA_Build as ecr-build-push.yaml (Reusable)
+    participant ECR as AWS ECR
+    participant EC2 as AWS EC2 Server
 
     Dev->>Git: 1. Push code to main
-    Git->>GHA: 2. Trigger deploy.yaml
-    GHA->>GHA: 3. Call reusable ecr-build-push.yaml
-    GHA->>ECR: 4. Build & Push backend & nginx images
-    ArgoU->>ECR: 5. Detect new image tags
-    ArgoU->>Infra: 6. Commit new tags to GitOps Repo
-    Argo->>Infra: 7. Detect manifest change
-    Argo->>K8s: 8. Sync & Deploy new pods
+    Git->>GHA_Deploy: 2. Trigger deploy.yaml
+    GHA_Deploy->>GHA_Build: 3. Call reusable ecr-build-push.yaml
+    GHA_Build->>ECR: 4. Build & Push backend & nginx images
+    GHA_Deploy->>EC2: 5. Execute Deployment (Pull new images)
 ```
 
-### 1. Continuous Integration (GitHub Actions)
-Located in `.github/workflows/`, our automated CI pipelines trigger upon code pushes to the `main` branch:
-- **Modular Pipeline Architecture (`deploy.yaml` & `ecr-build-push.yaml`):** We use a highly reusable modular workflow. The main `deploy.yaml` orchestrates the build by calling the reusable `ecr-build-push.yaml` for multiple services, building the `backend` and `nginx` Docker images in parallel.
-- **Direct ECR Integration:** The pipeline securely authenticates with AWS and pushes the tagged images directly to the Elastic Container Registries (`lost-found/backend`, `lost-found/nginx`) automatically provisioned by our Terraform code.
-- **Configuration:** You only need to configure your GitHub Repository Secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, and `AWS_ECR_REGISTRY`) and the pipeline handles the rest automatically.
+### 1. Reusable Workflow Architecture
+Located in `.github/workflows/`, our automated CI/CD pipelines trigger upon code pushes to the `main` branch:
+- **Modular Design (`deploy.yaml` & `ecr-build-push.yaml`):** By utilizing reusable workflows, we drastically reduce code duplication. The parent `deploy.yaml` orchestrates the process by passing parameters (like `service_name` and `docker_context`) into the generic `ecr-build-push.yaml`. This builds the `backend` and `nginx` Docker images cleanly and in parallel.
+- **Benefits of Reusable YAMLs:** 
+  - **Maintainability:** Updating the build logic in one file automatically updates it for all microservices.
+  - **Consistency:** Ensures every service is built, tagged, and pushed using the exact same DevSecOps standards.
 
-### 2. Continuous Delivery (ArgoCD)
-- **GitOps Sync:** ArgoCD continuously monitors our separate Infrastructure Repository for changes.
-- **Automated Rollouts:** The **ArgoCD Image Updater** automatically detects new Docker image tags pushed by the CI pipeline, writes the new version back to the infrastructure repository, and seamlessly syncs the Kubernetes cluster to the new state.
-- **Alerting:** ArgoCD is configured to send real-time email notifications on successful deployments or cluster health degradation.
+### 2. Continuous Delivery (EC2)
+- **Direct ECR Integration:** The pipeline securely authenticates with AWS using GitHub Secrets and pushes the newly tagged images directly to the Elastic Container Registries automatically provisioned by Terraform.
+- **Automated Deployments:** Following a successful push to ECR, the pipeline handles deploying those updated images directly to the running EC2 instance.
+- **Configuration:** You only need to configure your GitHub Repository Secrets (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, and `AWS_ECR_REGISTRY`) and the pipeline handles the rest automatically.
 
 ---
 
@@ -250,16 +247,17 @@ This project utilizes Terraform to automate the provisioning of the *entire* AWS
 
 **The "One-Command" Setup:**
 With a single `terraform init && terraform apply`, Terraform will automatically provision:
-1. **Compute Infrastructure (`ec2-infra`):** The AWS EC2 instances, security groups, and networking rules necessary to host the Kubernetes cluster.
+1. **Compute Infrastructure (`ec2-infra` module):** The AWS EC2 instances, security groups, and networking rules. Utilizing modular Terraform blocks keeps the infrastructure code clean, highly reusable, and easy to extend.
 2. **Container Registries (`ecr.tf`):** The exact AWS Elastic Container Registries (`lost-found/backend` and `lost-found/nginx`) required by the GitHub Actions pipelines.
 
 **Benefits of this Setup:**
+- **Modularity & Reusability:** Just like our GitHub Actions, structuring Terraform into modules (`ec2-infra`) allows us to cleanly reuse the same infrastructure logic across different environments (dev/prod) without duplicating code.
 - **Fully Automated Lifecycle:** Because Terraform creates the ECR repositories automatically, you only need to configure your GitHub secrets to achieve a fully operational deployment pipeline from scratch.
 - **Automated ECR Cleanup Policies:** We utilize `aws_ecr_lifecycle_policy` to automatically expire older Docker images (keeping only the last 5), completely preventing storage bloat and saving AWS costs over time.
-- **Automated & Repeatable:** The entire 5-container microservice architecture can be spun up from scratch in minutes.
 - **Remote State Management:** We use an S3 Bucket and DynamoDB table to store the Terraform state file remotely. This prevents state corruption, enables state locking, and allows multiple DevOps engineers to collaborate safely.
 - **Security First:** SSH keys are generated locally and explicitly ignored by Git, ensuring zero credential leakage into version control.
-- **Cost Control:** A single command (`terraform destroy`) cleanly tears down the EC2 instances, ECR repositories, and networking rules when testing is complete, preventing unexpected AWS bills.
+- **Principle of Least Privilege:** The EC2 instances are provisioned with strictly scoped IAM roles (`iam.tf`) granting *only* the specific permissions required to pull images from ECR, maximizing security.
+- **Cost Control:** A single command (`terraform destroy`) cleanly tears down the EC2 instances, ECR repositories, and networking rules when testing is complete.
 
 ---
 
@@ -338,38 +336,10 @@ terraform destroy -auto-approve
 
 ### Method 3: Local Kubernetes (KIND) Setup
 
-If you want to test the Kubernetes deployment locally without AWS, you can use KIND (Kubernetes IN Docker).
+If you want to deploy and test the application locally using Kubernetes (KIND) and GitOps (ArgoCD), those configurations have been abstracted into our dedicated GitOps repository to maintain a clean architecture.
 
-**Prerequisites:**
-- [Docker](https://docs.docker.com/get-docker/)
-- [KIND](https://kind.sigs.k8s.io/docs/user/quick-start/#installation)
-- [kubectl](https://kubernetes.io/docs/tasks/tools/)
-
-**Step-by-step:**
-1. **Create a local KIND cluster:**
-   ```bash
-   kind create cluster --name lost-found-cluster
-   ```
-2. **Build and Load the Docker Image:**
-   Build the image locally and load it into your KIND cluster so Kubernetes can access it without pulling from a remote registry.
-   ```bash
-   docker build -t parthsingh2496/lost-found-ultra:v1.0.0 .
-   kind load docker-image parthsingh2496/lost-found-ultra:v1.0.0 --name lost-found-cluster
-   ```
-3. **Deploy the Application:**
-   If you have a `velzion.yaml` orchestration configuration:
-   ```bash
-   velzion up
-   ```
-   Or natively apply the Kubernetes manifests if available:
-   ```bash
-   kubectl apply -f <path-to-k8s-manifests>
-   ```
-4. **Teardown:**
-   ```bash
-   kind delete cluster --name lost-found-cluster
-   ```
-   ```
+👉 **Refer to the GitOps Repository for local K8s instructions:**  
+[https://github.com/Parth2496Singh/Lost-and-Found-GitOps](https://github.com/Parth2496Singh/Lost-and-Found-GitOps)
 
 ---
 
