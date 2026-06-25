@@ -15,3 +15,18 @@ staticfiles/
 
 # Environment files
 .env
+
+**/.terraform/*
+
+# .tfstate files (CRITICAL SECURITY)
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Ignore private SSH keys
+*.pem
+*terraform-ec2-key*
+
+# Ignore any secret variable files
+*.tfvars
