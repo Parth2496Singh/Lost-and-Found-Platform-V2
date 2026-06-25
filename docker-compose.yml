@@ -1,7 +1,6 @@
 services:
     nginx:
-        build:
-            context: ./nginx
+        image: "815090125753.dkr.ecr.us-east-1.amazonaws.com/lost-found/nginx:latest"
         container_name: nginx
         networks:
             - django-networks
