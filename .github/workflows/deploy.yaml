@@ -14,6 +14,6 @@ jobs:
     with:
       service_name: lost-found/backend  #ECR repo name
       docker_context: .
-      dockerfile_path: ./
+      dockerfile_path: ./Dockerfile
       image_tag: v1.0.${{ github.run_number }}
     secrets: inherit
