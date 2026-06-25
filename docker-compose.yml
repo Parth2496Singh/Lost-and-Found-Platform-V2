@@ -11,7 +11,7 @@ services:
         depends_on:
             - django-app
     django-app:
-        image: "parthsingh2496/lost-found-ultra:v1.0.88"
+        image: "815090125753.dkr.ecr.us-east-1.amazonaws.com/lost-found/backend:latest"
         container_name: django-app
         networks:
             - django-networks
