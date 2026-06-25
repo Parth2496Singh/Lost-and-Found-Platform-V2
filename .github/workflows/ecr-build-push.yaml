@@ -59,10 +59,10 @@ jobs:
       - name: Tag Image
         run: |
           docker tag ${{ inputs.service_name }}:${{ inputs.image_tag }} \
-            $AWS_ECR_REGISTRY/${{ inputs.service_name }}:${{ inputs.image_tag }}
+            ${{ secrets.AWS_ECR_REGISTRY }}/${{ inputs.service_name }}:${{ inputs.image_tag }}
 
           docker tag ${{ inputs.service_name }}:${{ inputs.image_tag }} \
-            $AWS_ECR_REGISTRY/${{ inputs.service_name }}:latest
+            ${{ secrets.AWS_ECR_REGISTRY }}/${{ inputs.service_name }}:latest
 
       - name: Push Image
         run: |
